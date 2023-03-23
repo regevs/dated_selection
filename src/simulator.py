@@ -16,12 +16,17 @@ class Simulator(object):
     Un: float
     Ud: float
     n_generations: int
+    sampling_scheme: dict = None
     random_seed: ... = None
 
     def __post_init__(self):
         self.ancestors = []
         self.rng = np.random.default_rng(seed=self.random_seed)
         self.Nes = np.ones(self.n_generations, dtype=int) * self.Ne
+
+        if self.sampling_scheme is None:
+            self.sampling_scheme = {}
+        self.samples = {}
 
     def prune_ancestors(self, n_generation):
         """
@@ -40,6 +45,10 @@ class Simulator(object):
             return False
 
         # Prune
+        n_samples_to_take = self.sampling_scheme.get(n_generation - 1, 0)
+        if n_samples_to_take:
+            active_ancestors = set(active_ancestors) | set(range(n_samples_to_take))
+
         self.ancestors[n_generation - 1] = \
             {i:self.ancestors[n_generation - 1][i] for i in active_ancestors}
 
@@ -58,6 +67,10 @@ class Simulator(object):
         for n_generation in tqdm.trange(1, self.n_generations):
             # Collect any statistics here
 
+            # Extract samples if needed
+            if n_generation in self.sampling_scheme.keys():
+                n_samples_to_take = self.sampling_scheme[n_generation]
+                self.samples[n_generation] = [self.n_mutations_neutral[:n_samples_to_take], self.n_mutations_selected[:n_samples_to_take]]
 
             # Draw parents according to selection
             parents = self.rng.choice(
