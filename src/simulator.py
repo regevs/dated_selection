@@ -1,10 +1,6 @@
 from dataclasses import dataclass
 import numpy as np
 import tqdm
-import pprint
-
-import numba
-import numba.typed
 
 def normalize(a):
     return a / a.sum()
@@ -110,6 +106,30 @@ class Simulator(object):
             # Calculate new fitness
             self.fitness_scores = (1 - self.s) ** self.n_mutations_selected
             
+    def tmrca(self, time_i, index_i, time_j, index_j):
+        # Make sure time_i <= time_j
+        if time_i > time_j:
+            time_i, index_i, time_j, index_j = time_j, index_j, time_i, index_i
+
+        # Track j up until both are at time_i
+        while (time_j > time_i):
+            index_j = self.ancestors[time_j][index_j]
+            time_j -= 1
+
+        # Track both until they either meet on hit gen 0, in which case return -1
+        tmrca = 0
+        while time_i:
+            if index_i == index_j:
+                return tmrca
+            index_i = self.ancestors[time_i][index_i]
+            index_j = self.ancestors[time_i][index_j]
+            time_i -= 1
+            tmrca += 1
+
+        if time_i == 0:
+            return -1
+
+
 
 
 
