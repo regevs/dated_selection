@@ -33,7 +33,7 @@ class Simulator(object):
             return False
 
         active_ancestors = self.ancestors[n_generation].values()
-        prev_active_ancestors = self.ancestors[n_generation].keys()
+        prev_active_ancestors = self.ancestors[n_generation-1].keys()
 
         if active_ancestors == prev_active_ancestors:
             # Nothing to do
