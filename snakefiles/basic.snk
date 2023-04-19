@@ -1,6 +1,8 @@
 rule basic_desai_20230419_single_run:
     output:
         trees = str(data_dir / "basic_desai_20230419" / "seed={seed}" / "output.trees")
+    resources:
+        mem_mb = 4000
     run:
         shell(
             f"{slim_binary_path} "
@@ -20,4 +22,4 @@ rule basic_desai_20230419_single_run:
 rule basic_desai_20230419_final:
     input:
         [str(data_dir / "basic_desai_20230419" / f"seed={seed}" / "output.trees") \
-            for seed in [0]]
+            for seed in range(100)]
