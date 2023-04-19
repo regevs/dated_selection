@@ -1,0 +1,23 @@
+rule basic_desai_20230419_single_run:
+    output:
+        trees = str(data_dir / "basic_desai_20230419" / "seed={seed}" / "output.trees")
+    run:
+        shell(
+            f"{slim_binary_path} "
+            f" -s {wildcards.seed}"
+            f" -d genomeSize=1000000"
+            f" -d N=10000"
+            f" -d U=0.002"
+            f" -d s=-0.001"
+            f" -d save_every=1000"
+            f" -d N_generations=20000"
+            f" -d \"outputFile='{output.trees}'\""
+            f" -mem -time"
+            f" {slim_pytest_script}"
+        )
+
+
+rule basic_desai_20230419_final:
+    input:
+        [str(data_dir / "basic_desai_20230419" / f"seed={seed}" / "output.trees") \
+            for seed in [0]]
