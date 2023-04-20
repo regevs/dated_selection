@@ -46,6 +46,12 @@ late() {
 	if (any(freqs == 0.5)) {
 		sim.subpopulations.genomes.removeMutations(muts1[freqs == 0.5], T);
 	}
+
+	muts2 = sim.mutationsOfType(m2);
+	freqs = sim.mutationFrequencies(NULL, muts2);
+	if (any(freqs == 0.5)) {
+		sim.subpopulations.genomes.removeMutations(muts2[freqs == 0.5], T);
+	}
 }
 
 1:20000 mutationEffect(m1, p1) { return exp(s); }  // alter fitness by scale factor e^-s for each mutation
