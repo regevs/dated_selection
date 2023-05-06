@@ -23,3 +23,81 @@ rule basic_desai_20230419_final:
     input:
         [str(data_dir / "basic_desai_20230419" / f"seed={seed}" / "output.trees") \
             for seed in range(100)]
+
+# ------------------------------------------------------------------------            
+
+rule constant_20230420_single_run:
+    output:
+        trees = str(data_dir / "constant_20230420" / "seed={seed}" / "output.trees")
+    resources:
+        mem_mb = 4000
+    run:
+        shell(
+            f"{slim_binary_path} "
+            f" -s {wildcards.seed}"
+            f" -d genomeSize=1000000"
+            f" -d N=10000"
+            f" -d U=0.002"
+            f" -d s=0"
+            f" -d save_every=1000"
+            f" -d N_generations=20000"
+            f" -d \"outputFile='{output.trees}'\""
+            f" -mem -time"
+            f" {slim_pytest_script}"
+        )
+
+rule constant_20230420_final:
+    input:
+        [str(data_dir / "constant_20230420" / f"seed={seed}" / "output.trees") \
+            for seed in range(100)]
+
+# ------------------------------------------------------------------------
+
+rule constant_20230505_single_run:
+    output:
+        trees = temp(str(data_dir / "constant_20230505" / "seed={seed}" / "output.trees")),
+        n_lineages_csv = str(data_dir / "constant_20230505" / "seed={seed}" / "n_lineages.csv.gz"),
+        n_mutations_csv = str(data_dir / "constant_20230505" / "seed={seed}" / "n_mutations.csv.gz"),
+    resources:
+        mem_mb = 4000,
+    run:
+        sample_times = [0]
+        sample_sizes = [10000]
+        max_generations = 20000
+        n_tree_samples = 1
+
+        # Run the trees
+        shell(
+            f"{slim_binary_path} "
+            f" -s {wildcards.seed}"
+            f" -d genomeSize=1000000"
+            f" -d N=10000"
+            f" -d save_every=1000"
+            f" -d print_every=1000"
+            f" -d U=0.02"
+            f" -d s=0"
+            f" -d N_generations={max_generations}"
+            f" -d \"outputFile='{output.trees}'\""
+            f" -mem -time"
+            f" {slim_pytest_script}"
+        )
+
+        # Get stats
+        trees = tskit.load(output.trees)
+        
+        extract_tree_stats.extract_stats_to_file(
+            trees,
+            sample_times,
+            sample_sizes,
+            n_tree_samples,
+            max_generations,
+            output.n_lineages_csv,
+            output.n_mutations_csv,
+        )
+
+rule constant_20230505_final:
+    input:
+        [str(data_dir / "constant_20230505" / f"seed={seed}" / "n_lineages.csv.gz") \
+            for seed in range(100)]
+
+# ------------------------------------------------------------------------

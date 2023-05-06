@@ -2,34 +2,35 @@ initialize() {
 	if (!exists("genomeSize"))
 		defineConstant("genomeSize", 1000000);
 	if (!exists("N"))
-		defineConstant("N", 1000);
+		defineConstant("N", 10000);
 	if (!exists("U"))
-		defineConstant("U", 0.002);
+		defineConstant("U", 0.02);
 	if (!exists("s"))
-		defineConstant("s", -0.001);
+		defineConstant("s", -0.01);
 	if (!exists("N_generations"))
 		defineConstant("N_generations", 20000);
 	if (!exists("save_every"))
 		defineConstant("save_every", 1000);
+	if (!exists("print_every"))
+		defineConstant("print_every", 1000);
 	if (!exists("run"))
 		defineConstant("run", 1);
 	if (!exists("outputFile"))
-		defineConstant("outputFile", "pytest.trees");
-
-	initializeMutationRate(U/genomeSize); 
+		defineConstant("outputFile", "out.trees");
+	
+	initializeMutationRate(U/genomeSize/2);
 	initializeTreeSeq(); // record trees for recapitation and/or adding neutral mutations later
-	initializeMutationType("m1", 1.0, distributionType="f", 1.0); // neutral U_n
-	initializeMutationType("m2", 1.0, distributionType="f", 0.0); // selected U_d
+	initializeMutationType("m1", 1.0, distributionType="f", s/2); // selected U_d
 	// args are: name, dominance (1 for clarity in haploid), f for "fixed", s
 	m1.convertToSubstitution = T;
-	m1.mutationStackPolicy = "l";
+	m1.mutationStackPolicy = "f"; // this was "l" before. not sure what that did
 	
-	initializeGenomicElementType("g1", c(m1,m2), c(0.0,1.0)); // last is relative freqs of mutations
+	initializeGenomicElementType("g1", c(m1), 1.0); // last is relative freqs of mutations
 	// set last entry to 0,1 if you want no neutral mutations at this point	
 	initializeGenomicElement(g1, 0, genomeSize);
 	initializeRecombinationRate(0); // haploid
-	}
-	
+}
+
 // generating initial population
 1 early() {
 	sim.addSubpop("p1", N);
@@ -37,7 +38,7 @@ initialize() {
 }
 
 // necessary for haploid, copied straight from manual
-late() { 
+1:100000000 late() {
 	// remove any new mutations added to the disabled diploid genomes
 	sim.subpopulations.individuals.genome2.removeMutations();
 	// remove mutations in the haploid genomes that have fixed
@@ -46,41 +47,14 @@ late() {
 	if (any(freqs == 0.5)) {
 		sim.subpopulations.genomes.removeMutations(muts1[freqs == 0.5], T);
 	}
-
-	muts2 = sim.mutationsOfType(m2);
-	freqs = sim.mutationFrequencies(NULL, muts2);
-	if (any(freqs == 0.5)) {
-		sim.subpopulations.genomes.removeMutations(muts2[freqs == 0.5], T);
+	if ((sim.cycle % print_every) == 0) {
+		print("Generation reached: " + sim.cycle);
+	}
+	if ((sim.cycle % save_every) == 0) {
+		sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);
+	}
+	if (sim.cycle == N_generations) {
+		sim.treeSeqOutput(outputFile, simplify = F);
+		sim.simulationFinished();
 	}
 }
-
-1:20000 mutationEffect(m1, p1) { return exp(s); }  // alter fitness by scale factor e^-s for each mutation
-
-1 late() {sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);}
-1000 late() {sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);}
-2000 late() {sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);}
-3000 late() {sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);}
-4000 late() {sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);}
-5000 late() {sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);}
-6000 late() {sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);}
-7000 late() {sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);}
-8000 late() {sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);}
-9000 late() {sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);}
-10000 late() {sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);}
-11000 late() {sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);}
-12000 late() {sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);}
-13000 late() {sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);}
-14000 late() {sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);}
-15000 late() {sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);}
-16000 late() {sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);}
-17000 late() {sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);}
-18000 late() {sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);}
-19000 late() {sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);}
-20000 late() {
-	sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);
-	sim.treeSeqOutput(outputFile, simplify = F);
-	sim.simulationFinished();
-}
-
-
-

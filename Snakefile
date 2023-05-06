@@ -1,5 +1,10 @@
 # Imports
 from pathlib import Path
+import pandas as pd
+import tskit
+import numpy as np
+
+from src import extract_tree_stats
 
 # Paths
 project_path = Path("/rds/project/rds-8b3VcZwY7rY/projects/dated_selection")
