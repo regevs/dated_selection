@@ -91,6 +91,7 @@ def extract_stats_to_file(
     max_generations,
     n_lineages_csv_filename,
     n_mutations_csv_filename,
+    ts_filename_prefix=None,
 ):
     all_n_lineages = []
     all_n_mutations = []
@@ -101,6 +102,10 @@ def extract_stats_to_file(
                 sample_times=sample_times,
                 sample_sizes=sample_sizes,
             )
+
+        # Save ts
+        if ts_filename_prefix:
+            ts.dump(f"{ts_filename_prefix}.sample={n_sample}.trees")
 
         # Count lineages
         n_lineages = get_lineages(
