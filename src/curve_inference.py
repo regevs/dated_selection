@@ -82,7 +82,7 @@ def read_all_n_lineages(path):
     all_filenames = list(Path(path).glob("*/n_lineages.csv.gz"))
 
     readme = lambda filename: pd.read_csv(filename, header=None).values
-    all_n_lineages = joblib.Parallel(n_jobs=-1)(
+    all_n_lineages = joblib.Parallel(n_jobs=-1, verbose=10)(
         joblib.delayed(readme)(filename) for filename in all_filenames
     )
                     

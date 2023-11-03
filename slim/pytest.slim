@@ -13,14 +13,12 @@ initialize() {
 		defineConstant("save_every", 1000);
 	if (!exists("print_every"))
 		defineConstant("print_every", 1000);
-	if (!exists("run"))
-		defineConstant("run", 1);
 	if (!exists("outputFile"))
 		defineConstant("outputFile", "out.trees");
 	
-	initializeMutationRate(U/genomeSize*2);
+	initializeMutationRate(U/genomeSize);
 	initializeTreeSeq(); // record trees for recapitation and/or adding neutral mutations later
-	initializeMutationType("m1", 1.0, distributionType="f", s*2); // selected U_d
+	initializeMutationType("m1", 1.0, distributionType="f", s); // selected U_d
 	// args are: name, dominance (1 for clarity in haploid), f for "fixed", s
 	m1.convertToSubstitution = T;
 	m1.mutationStackPolicy = "f"; // this was "l" before. not sure what that did
@@ -37,7 +35,7 @@ initialize() {
 	p1.setCloningRate(1.0); // haploid
 }
 
-// necessary for haploid, copied straight from manual
+
 1:100000000 late() {
 	// remove any new mutations added to the disabled diploid genomes
 	sim.subpopulations.individuals.genome2.removeMutations();

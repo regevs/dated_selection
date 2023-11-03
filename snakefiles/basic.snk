@@ -24,7 +24,41 @@ rule basic_desai_20230419_final:
         [str(data_dir / "basic_desai_20230419" / f"seed={seed}" / "output.trees") \
             for seed in range(100)]
 
-# ------------------------------------------------------------------------            
+# ------------------------------------------------------------------------    
+
+rule neutral_desai_20230626:
+    output:
+        trees = str(data_dir / "neutral_desai_20230626" / "seed={seed}" / "output.trees")
+    resources:
+        mem_mb = 8000,
+    run:
+        max_generations = 4000
+        sample_times = [0]
+        sample_sizes = [100]
+
+        # Run the trees
+        shell(
+            f"{slim_binary_path} "
+            f" -s {wildcards.seed}"
+            f" -d genomeSize=1000000"
+            f" -d N=10000"
+            f" -d save_every=1000"
+            f" -d print_every=1000"
+            f" -d U=0.02"
+            f" -d s=0.0"
+            f" -d N_generations={max_generations}"
+            f" -d \"outputFile='{output.trees}'\""
+            f" -mem -time"
+            f" {slim_pytest_script}"
+        )   
+
+
+rule neutral_desai_20230626_final:
+    input:
+        [str(data_dir / "neutral_desai_20230626" / f"seed={seed}" / "output.trees") \
+            for seed in range(100)]
+
+# ------------------------------------------------------------------------
 
 rule constant_20230420_single_run:
     output:
@@ -290,9 +324,150 @@ rule two_times_pairwise_20230608:
             max_generations,            
             output.n_lineages_csv,
             output.n_mutations_csv,
-        )        
+        )       
 
-rule two_times_pairwise_20230608_final:
+
+# ------------------------------------------------------------------------
+
+rule two_times_earlier_20230623:
+    output:
+        trees = temp(str(data_dir / "two_times_earlier_20230623" / "seed={seed}" / "output.trees")),
+        n_lineages_csv = str(data_dir / "two_times_earlier_20230623" / "seed={seed}" / "n_lineages.csv.gz"),
+        n_mutations_csv = str(data_dir / "two_times_earlier_20230623" / "seed={seed}" / "n_mutations.csv.gz"),
+    resources:
+        mem_mb = 16000,
+    run:
+        max_generations = 40000
+        sample_times = [0, 100]
+        sample_sizes = [100, 100]
+        n_tree_samples = 100
+
+        # Run the trees
+        shell(
+            f"{slim_binary_path} "
+            f" -s {wildcards.seed}"
+            f" -d genomeSize=1000000"
+            f" -d N=10000"
+            f" -d save_every=100"
+            f" -d print_every=1000"
+            f" -d U=0.02"
+            f" -d s=-0.01"
+            f" -d N_generations={max_generations}"
+            f" -d \"outputFile='{output.trees}'\""
+            f" -mem -time"
+            f" {slim_pytest_script}"
+        )
+
+        # Get stats
+        trees = tskit.load(output.trees)
+        
+        extract_tree_stats.extract_stats_to_file(
+            trees,
+            sample_times,
+            sample_sizes,
+            n_tree_samples,
+            max_generations,            
+            output.n_lineages_csv,
+            output.n_mutations_csv,
+        )                 
+
+rule another_desai_20230626:
+    output:
+        trees = str(data_dir / "another_desai_20230626" / "seed={seed}" / "output.trees"),
+        n_lineages_csv = str(data_dir / "another_desai_20230626" / "seed={seed}" / "n_lineages.csv.gz"),
+        n_mutations_csv = str(data_dir / "another_desai_20230626" / "seed={seed}" / "n_mutations.csv.gz"),
+    resources:
+        mem_mb = 8000,
+    run:
+        max_generations = 4000
+        sample_times = [0]
+        sample_sizes = [10000]
+        n_tree_samples = 1
+
+
+        # Run the trees
+        shell(
+            f"{slim_binary_path} "
+            f" -s {wildcards.seed}"
+            f" -d genomeSize=1000000"
+            f" -d N=10000"
+            f" -d save_every=1000"
+            f" -d print_every=1000"
+            f" -d U=0.02"
+            f" -d s=-0.01"
+            f" -d N_generations={max_generations}"
+            f" -d \"outputFile='{output.trees}'\""
+            f" -mem -time"
+            f" {slim_pytest_script}"
+        )
+
+         # Get stats
+        trees = tskit.load(output.trees)
+        
+        extract_tree_stats.extract_stats_to_file(
+            trees,
+            sample_times,
+            sample_sizes,
+            n_tree_samples,
+            max_generations,
+            output.n_lineages_csv,
+            output.n_mutations_csv,
+        )
+
+
+rule another_desai_20230626_final:
     input:
-        [str(data_dir / "two_times_pairwise_20230608" / f"seed={seed}" / "n_lineages.csv.gz") \
+        [str(data_dir / "another_desai_20230626" / f"seed={seed}" / "output.trees") \
+            for seed in range(100)]
+
+
+
+# ------------------------------------------------------------------------
+
+rule two_times_1000_20230706:
+    output:
+        trees = str(data_dir / "two_times_1000_20230706" / "seed={seed}" / "output.trees"),
+        n_lineages_csv = str(data_dir / "two_times_1000_20230706" / "seed={seed}" / "n_lineages.csv.gz"),
+        n_mutations_csv = str(data_dir / "two_times_1000_20230706" / "seed={seed}" / "n_mutations.csv.gz"),
+    resources:
+        mem_mb = 8000,
+    run:
+        max_generations = 2000
+        sample_times = [0, 1000]
+        sample_sizes = [100, 100]
+        n_tree_samples = 100
+
+        # Run the trees
+        shell(
+            f"{slim_binary_path} "
+            f" -s {wildcards.seed}"
+            f" -d genomeSize=1000000"
+            f" -d N=10000"
+            f" -d save_every=1000"
+            f" -d print_every=1000"
+            f" -d U=0.02"
+            f" -d s=-0.01"
+            f" -d N_generations={max_generations}"
+            f" -d \"outputFile='{output.trees}'\""
+            f" -mem -time"
+            f" {slim_pytest_script}"
+        )
+
+        # Get stats
+        trees = tskit.load(output.trees)
+        
+        extract_tree_stats.extract_stats_to_file(
+            trees,
+            sample_times,
+            sample_sizes,
+            n_tree_samples,
+            max_generations,            
+            output.n_lineages_csv,
+            output.n_mutations_csv,
+        )       
+
+
+rule two_times_1000_20230706_final:
+    input:
+        [str(data_dir / "two_times_1000_20230706" / f"seed={seed}" / "n_lineages.csv.gz") \
             for seed in range(100)]                  

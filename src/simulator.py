@@ -53,14 +53,16 @@ class Simulator(object):
 
     def run(self):
         # Initialize first generation
-        self.n_mutations_neutral = np.zeros(self.Nes[0], dtype=int)
+        self.n_mutations_neutral = np.zeros(self.Nes[0], dtype=int)        
         self.n_mutations_selected = np.zeros(self.Nes[0], dtype=int)
+        self.all_n_mutations_selected = [self.n_mutations_selected.copy()]
+        self.all_new_mutations_selected = [self.n_mutations_selected.copy()]
         self.fitness_scores = np.ones(self.Nes[0], dtype=float)
         self.ancestors = [{} for n_generation in range(self.n_generations)]
         self.ancestors[0] = {i:i for i in range(self.Nes[0])}
 
         # Do generation by generation
-        for n_generation in tqdm.trange(1, self.n_generations):
+        for n_generation in range(1, self.n_generations):
             # Collect any statistics here
 
             # Extract samples if needed
@@ -96,12 +98,15 @@ class Simulator(object):
                 p = self.Un,
                 size = self.Nes[n_generation]
             )
-
-            self.n_mutations_selected += self.rng.binomial(
+            new_mutations = self.rng.binomial(
                 n = 1, 
                 p = self.Ud,
                 size = self.Nes[n_generation]
             )
+            self.n_mutations_selected += new_mutations
+
+            self.all_new_mutations_selected.append(new_mutations.copy())
+            self.all_n_mutations_selected.append(self.n_mutations_selected.copy())
 
             # Calculate new fitness
             self.fitness_scores = (1 - self.s) ** self.n_mutations_selected

@@ -6,6 +6,7 @@ import scipy.special
 import os, subprocess
 import msprime
 import sys 
+import numba
 
 filename = sys.argv[1]
 
@@ -78,6 +79,8 @@ def get_lineages(ts, max_generations, sample_times, sample_sizes):
         n_lineages[coal_time:] -= (n_children-1)
 
     return n_lineages
+
+
     
 def get_mutation_counts(mutation_times, max_generations):
     mutation_count_per_generation = np.histogram(max_generations - np.array(mutation_times), np.arange(max_generations+1))[0]
