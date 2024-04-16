@@ -14,4 +14,5 @@ slim_binary_path = "slim"
 slim_pytest_script = "./slim/pytest.slim"
 
 include: "snakefiles/basic.snk"
+include: "snakefiles/paper_simulations.snk"
 

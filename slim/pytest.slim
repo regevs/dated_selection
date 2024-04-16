@@ -11,6 +11,8 @@ initialize() {
 		defineConstant("N_generations", 20000);
 	if (!exists("save_every"))
 		defineConstant("save_every", 1000);
+	if (!exists("save_every_last"))
+		defineConstant("save_every_last", 1000);
 	if (!exists("print_every"))
 		defineConstant("print_every", 1000);
 	if (!exists("outputFile"))
@@ -50,6 +52,10 @@ initialize() {
 	}
 	if ((sim.cycle % save_every) == 0) {
 		sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);
+	} else {
+		if ((sim.cycle > (N_generations - save_every)) & ((sim.cycle % save_every_last) == 0)) {
+			sim.treeSeqRememberIndividuals(sim.subpopulations.individuals);
+		}
 	}
 	if (sim.cycle == N_generations) {
 		sim.treeSeqOutput(outputFile, simplify = F);

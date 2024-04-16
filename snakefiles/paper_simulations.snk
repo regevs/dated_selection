@@ -1,0 +1,47 @@
+tszip_path = "/home/rs2145/rs2145/software/anaconda3/envs/dated_selection/bin/tszip"
+
+# ------------------------------------------------------------------------
+
+rule paper_simulation_set_20240416:
+    output:
+        trees = str(data_dir / "paper_simulation_set_20240416" / "logNs={log_Ns}" / "logNUd={log_NUd}" / "seed={seed}" / "output.trees.tsz"),
+    resources:
+        mem_mb = 8000,
+    run:        
+        N = 10000
+        max_generations = 4 * N
+        Ud = 10**float(wildcards.log_NUd) / N
+        s = -1 * 10**float(wildcards.log_Ns) / N
+
+        trees_file = output.trees.replace(".tsz", "")
+
+        # Run the trees
+        shell(
+            f"{slim_binary_path} "
+            f" -s {wildcards.seed}"
+            f" -d genomeSize=1000000"
+            f" -d N={N}"
+            f" -d save_every=1000"
+            f" -d save_every_last=100"
+            f" -d print_every=1000"
+            f" -d U={Ud}"
+            f" -d s={s}"
+            f" -d N_generations={max_generations}"
+            f" -d \"outputFile='{trees_file}'\""
+            f" -mem -time"
+            f" {slim_pytest_script}"
+        )
+
+        shell(
+            "{tszip_path} {trees_file}"
+        )
+
+
+rule paper_simulation_set_20240416_final:
+    input:
+        [str(data_dir / "paper_simulation_set_20240416" / f"logNs={log_Ns}" / f"logNUd={log_NUd}" / f"seed={seed}" / "output.trees.tsz") \
+            for log_Ns in np.arange(-3, 3.5, 0.5) \
+            for log_NUd in [2] \
+            for seed in range(10)]
+
+
