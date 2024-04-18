@@ -7,6 +7,7 @@ rule paper_simulation_set_20240416:
         trees = str(data_dir / "paper_simulation_set_20240416" / "logNs={log_Ns}" / "logNUd={log_NUd}" / "seed={seed}" / "output.trees.tsz"),
     resources:
         mem_mb = 8000,
+        time_min = 20,
     run:        
         N = 10000
         max_generations = 4 * N
@@ -40,8 +41,72 @@ rule paper_simulation_set_20240416:
 rule paper_simulation_set_20240416_final:
     input:
         [str(data_dir / "paper_simulation_set_20240416" / f"logNs={log_Ns}" / f"logNUd={log_NUd}" / f"seed={seed}" / "output.trees.tsz") \
-            for log_Ns in np.arange(-3, 3.5, 0.5) \
+            for log_Ns in np.arange(-3, 3.75, 0.25) \
             for log_NUd in [2] \
+            for seed in range(50)]
+
+
+# ------------------------------------------------------------------------
+
+import scipy.optimize
+def change_coords(V, S):
+    def f(x):
+        NUd, Ns = x
+        return np.array([NUd * Ns**2 - V, 2 * Ns * np.exp(-NUd / Ns) - S])
+
+    res = scipy.optimize.root(
+        fun = f,
+        x0 = [0.1, 0.1]
+    )
+
+    return res.x[0], res.x[1]
+
+rule paper_simulation_set_20240417:
+    output:
+        trees = str(data_dir / "paper_simulation_set_20240417" / "logS={logS}" / "logV={logV}" / "seed={seed}" / "output.trees.tsz"),
+    resources:
+        mem_mb = 8000,
+        time_min = 20,
+    run:        
+        N = 10000        
+        max_generations = 4 * N
+
+        V = 10**float(wildcards.logV)
+        S = 10**float(wildcards.logS)
+
+        NUd, Ns = change_coords(V, S)
+        Ud = NUd / N
+        s = Ns / N
+
+        trees_file = output.trees.replace(".tsz", "")
+
+        # Run the trees
+        shell(
+            f"{slim_binary_path} "
+            f" -s {wildcards.seed}"
+            f" -d genomeSize=1000000"
+            f" -d N={N}"
+            f" -d save_every=1000"
+            f" -d save_every_last=100"
+            f" -d print_every=1000"
+            f" -d U={Ud}"
+            f" -d s={s}"
+            f" -d N_generations={max_generations}"
+            f" -d \"outputFile='{trees_file}'\""
+            f" -mem -time"
+            f" {slim_pytest_script}"
+        )
+
+        shell(
+            "{tszip_path} {trees_file}"
+        )
+
+
+rule paper_simulation_set_20240417_final:
+    input:
+        [str(data_dir / "paper_simulation_set_20240417" / f"logS={logS}" / f"logV={logV}" / f"seed={seed}" / "output.trees.tsz") \
+            for logS in [-1] \
+            for logV in np.arange(-1, 6.5, 0.5) \
             for seed in range(10)]
 
 
