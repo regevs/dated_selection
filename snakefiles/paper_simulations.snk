@@ -107,6 +107,6 @@ rule paper_simulation_set_20240417_final:
         [str(data_dir / "paper_simulation_set_20240417" / f"logS={logS}" / f"logV={logV}" / f"seed={seed}" / "output.trees.tsz") \
             for logS in [-1] \
             for logV in np.arange(-1, 6.5, 0.5) \
-            for seed in range(10)]
+            for seed in range(50)]
 
 
