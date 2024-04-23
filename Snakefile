@@ -3,6 +3,7 @@ from pathlib import Path
 import pandas as pd
 import tskit
 import numpy as np
+import itertools
 
 from src import extract_tree_stats
 
