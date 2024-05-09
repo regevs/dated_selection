@@ -119,51 +119,51 @@ def generate(Ud=0.02, s=0.01, n=100, N=np.array([10000]), numclasses=0 ,
             mut_probs = raw_mut_rates / lambda_alpha
             coalprob = np.sum(coal_probs) / (np.sum(coal_probs) + np.sum(mut_probs)) if np.sum(coal_probs) + np.sum(mut_probs) != 0.0 else 0.0
 
-        #     # Update bookkeeping for dated tips and pop size switches
-        #     if (len(tipsnotin)>0) or (len(remainingswitches)>0) :
-        #         time_to_next_tip_drop_in = np.min(nodeages[nodeages > t] - t) if len(nodeages[nodeages > t]) > 0 else np.inf
-        #         time_to_next_pop_size_switch = np.min(remainingswitches[remainingswitches >= t] - t) if remainingswitches[remainingswitches >= t].size > 0 else np.inf
-        #         time_to_next_tip_drop_in= np.min(remainingswitches[remainingswitches >= t] - t) if remainingswitches[remainingswitches >= t].size > 0 else np.inf
-        #         time_to_next_event =  min(time_to_next_tip_drop_in, time_to_next_pop_size_switch)
-        #         next_event = "linadd" if time_to_next_event == time_to_next_tip_drop_in else "popsizechange"
+            # Update bookkeeping for dated tips and pop size switches
+            if (len(tipsnotin)>0) or (len(remainingswitches)>0) :
+                time_to_next_tip_drop_in = np.min(nodeages[nodeages > t] - t) if len(nodeages[nodeages > t]) > 0 else np.inf
+                time_to_next_pop_size_switch = np.min(remainingswitches[remainingswitches >= t] - t) if remainingswitches[remainingswitches >= t].size > 0 else np.inf
+                time_to_next_tip_drop_in= np.min(remainingswitches[remainingswitches >= t] - t) if remainingswitches[remainingswitches >= t].size > 0 else np.inf
+                time_to_next_event =  min(time_to_next_tip_drop_in, time_to_next_pop_size_switch)
+                next_event = "linadd" if time_to_next_event == time_to_next_tip_drop_in else "popsizechange"
 
-        #     # How long until the next event and what is it?
-        #     somethinghappened = np.random.exponential(1 / lambda_alpha) if lambda_alpha > 0 else time_to_next_event
-        #     whathappened = next_event if time_to_next_event <= somethinghappened else random_choice_numba(["coal", "mut"], np.array([coalprob, 1 - coalprob]))
+            # How long until the next event and what is it?
+            somethinghappened = np.random.exponential(1 / lambda_alpha) if lambda_alpha > 0 else time_to_next_event
+            whathappened = next_event if time_to_next_event <= somethinghappened else random_choice_numba(["coal", "mut"], np.array([coalprob, 1 - coalprob]))
 
-        #     # Update CTMC and tracking variables
-        #     if whathappened == "popsizechange":
-        #         currN += 1  # Increment to next population size
-        #         remainingswitches = remainingswitches[1:] 
-        #         t += time_to_next_pop_size_switch
-        #         time_to_next_event = np.inf
+            # Update CTMC and tracking variables
+            if whathappened == "popsizechange":
+                currN += 1  # Increment to next population size
+                remainingswitches = remainingswitches[1:] 
+                t += time_to_next_pop_size_switch
+                time_to_next_event = np.inf
 
-        #     if whathappened == "linadd":
-        #         minagetoadd = float(np.min(nodeages[tipsnotin]))
-        #         addtips = np.where(nodeages == minagetoadd)[0]
-        #         addlineages = tip_classes[addtips]
-        #         for l in addlineages:
-        #             alpha[l + 1] += 1
-        #         tipsnotin = setdiff(tipsnotin, addtips) # previously tipsnotin[np.setdiff1d(tipsnotin, addtips)]
-        #         t += time_to_next_tip_drop_in
-        #         time_to_next_event = np.inf
+            if whathappened == "linadd":
+                minagetoadd = float(np.min(nodeages[tipsnotin]))
+                addtips = np.where(nodeages == minagetoadd)[0]
+                addlineages = tip_classes[addtips]
+                for l in addlineages:
+                    alpha[l + 1] += 1
+                tipsnotin = setdiff(tipsnotin, addtips) # previously tipsnotin[np.setdiff1d(tipsnotin, addtips)]
+                t += time_to_next_tip_drop_in
+                time_to_next_event = np.inf
 
-        #     if whathappened == "coal":
-        #         whichcoal = random_choice_numba(np.arange(0, numclasses), coal_probs / coalprob)
-        #         alpha = alpha - e[whichcoal]
-        #         t += somethinghappened
-        #         coalescent_times[n_rep, counter] = t
-        #         counter +=1
+            if whathappened == "coal":
+                whichcoal = random_choice_numba(np.arange(0, numclasses), coal_probs / coalprob)
+                alpha = alpha - e[whichcoal]
+                t += somethinghappened
+                coalescent_times[n_rep, counter] = t
+                counter +=1
             
-        #     if whathappened == "mut":
-        #         whichmut = random_choice_numba(np.arange(0, numclasses), mut_probs / (1 - coalprob))
-        #         if whichmut == 0:
-        #             print("serious error")
-        #         alpha = alpha - e[whichmut] + e[whichmut-1]
-        #         t += somethinghappened
+            if whathappened == "mut":
+                whichmut = random_choice_numba(np.arange(0, numclasses), mut_probs / (1 - coalprob))
+                if whichmut == 0:
+                    print("serious error")
+                alpha = alpha - e[whichmut] + e[whichmut-1]
+                t += somethinghappened
             
-        #     numlineages = np.sum(alpha)
-        #     # alphalist = np.append(alphalist,alpha.copy())
+            numlineages = np.sum(alpha)
+            # alphalist = np.append(alphalist,alpha.copy())
 
     # alphalist_matrix = alphalist.reshape((alphalist.size // numclasses, numclasses))
     return coalescent_times
