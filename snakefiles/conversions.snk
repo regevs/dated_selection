@@ -1,0 +1,28 @@
+import warnings
+import msprime
+
+localrules: tsz_to_newick
+rule tsz_to_newick:
+    input:
+        trees = str(data_dir / "{intermediate_path}" / "output.trees.tsz"),
+    output:
+        newick = str(data_dir / "{intermediate_path}" / "output.trees.n_tips={n_tips}.newick"),
+    resources:
+        mem_mb = 4000,
+        time_min = 5,
+    run:
+        warnings.simplefilter('ignore', msprime.TimeUnitsMismatchWarning)
+        ts = loader.load_tree_sequence_from_slim(
+            input.trees,
+            [int(wildcards.n_tips)],
+            sample_times = [0],
+            neutral_mutation_rate_per_genome = 0.0,
+            random_seed = 42,
+            recapitate = True,
+            recapitate_Ne = 10000,
+            n_reps = 1,
+        )
+
+        T = ts.first().split_polytomies(random_seed=42)
+        with open(output.newick, "w") as F:
+            F.write(T.as_newick())

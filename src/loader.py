@@ -12,6 +12,7 @@ def load_tree_sequence_from_slim(
     random_seed = 42,
     recapitate = False,
     recapitate_Ne = None,
+    n_reps = 1,
 ):
     """
     - Loads a SLiM output file
@@ -39,23 +40,30 @@ def load_tree_sequence_from_slim(
     # Throw away all the odd-numbered nodes - these are leftovers from the haploid simulation
     sts = sts.simplify(np.arange(0, len(sts.nodes_time), 2))
                         
-    # Take a subset of samples    
-    sts = sts.simplify([
-        sts.individual(i).nodes[0] \
-        for n_samples, sample_time in zip(n_samples_per_time, sample_times) \
-        for i in rng.choice(pyslim.individuals_alive_at(sts, sample_time), n_samples, replace=False)
-    ])
+    # Take a subset of samples  
+    all_mts = []
+    for rep in range(n_reps):
+        qts = sts.simplify([
+            sts.individual(i).nodes[0] \
+            for n_samples, sample_time in zip(n_samples_per_time, sample_times) \
+            for i in rng.choice(pyslim.individuals_alive_at(sts, sample_time), n_samples, replace=False)
+        ])
 
-    # Add neutrals if needed
-    mts = msprime.sim_mutations(
-        sts,
-        rate=neutral_mutation_rate_per_genome/sts.sequence_length,    # per bp
-        model=msprime.SLiMMutationModel(type=3, next_id=pyslim.next_slim_mutation_id(sts)), # type=3 is just any mutation type unused in the simulation
-        keep=True, 
-        discrete_genome=True,
-        random_seed=random_seed,
-    )
+        # Add neutrals if needed
+        mts = msprime.sim_mutations(
+            qts,
+            rate=neutral_mutation_rate_per_genome/sts.sequence_length,    # per bp
+            model=msprime.SLiMMutationModel(type=3, next_id=pyslim.next_slim_mutation_id(qts)), # type=3 is just any mutation type unused in the simulation
+            keep=True, 
+            discrete_genome=True,
+            random_seed=random_seed,
+        )
 
-    return mts
+        all_mts.append(mts)
+
+    if n_reps == 1:
+        return all_mts[0]
+    else:
+        return all_mts
 
     

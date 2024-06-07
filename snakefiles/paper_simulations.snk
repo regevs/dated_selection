@@ -40,7 +40,8 @@ rule paper_simulation_set_20240416:
 
 rule paper_simulation_set_20240416_final:
     input:
-        [str(data_dir / "paper_simulation_set_20240416" / f"logNs={log_Ns}" / f"logNUd={log_NUd}" / f"seed={seed}" / "output.trees.tsz") \
+        #[str(data_dir / "paper_simulation_set_20240416" / f"logNs={log_Ns}" / f"logNUd={log_NUd}" / f"seed={seed}" / "output.trees.tsz") \
+        [str(data_dir / "paper_simulation_set_20240416" / f"logNs={log_Ns}" / f"logNUd={log_NUd}" / f"seed={seed}" / "output.trees.n_tips=1000.newick") \
             for log_Ns in [-20] + list(np.arange(-3, 3.75, 0.25)) \
             for log_NUd in [2] \
             for seed in range(50)]
@@ -49,15 +50,20 @@ rule paper_simulation_set_20240416_final:
 # ------------------------------------------------------------------------
 
 import scipy.optimize
-def change_coords(V, S):
+def log_change_coords(logV, logS, return_res=False):
     def f(x):
-        NUd, Ns = x
-        return np.array([NUd * Ns**2 - V, 2 * Ns * np.exp(-NUd / Ns) - S])
+        log_NUd, log_Ns = x
+        return np.array([log_NUd + 2 * log_Ns - logV, np.log10(2) + log_Ns - (10**(log_NUd-log_Ns))/np.log(10) - logS])
 
     res = scipy.optimize.root(
         fun = f,
-        x0 = [0.1, 0.1]
+        x0 = [2, 2],
+        method='hybr',
+        options = {"maxfev": 1000000},
     )
+
+    if return_res:
+        return res
 
     return res.x[0], res.x[1]
 
@@ -65,8 +71,8 @@ rule paper_simulation_set_20240417:
     output:
         trees = str(data_dir / "paper_simulation_set_20240417" / "logS={logS}" / "logV={logV}" / "seed={seed}" / "output.trees.tsz"),
     resources:
-        mem_mb = 8000,
-        time_min = 30,
+        mem_mb = 12000,
+        time_min = 60,
     run:        
         N = 10000        
         max_generations = 4 * N
@@ -74,7 +80,9 @@ rule paper_simulation_set_20240417:
         V = 10**float(wildcards.logV)
         S = 10**float(wildcards.logS)
 
-        NUd, Ns = change_coords(V, S)
+        log_NUd, log_Ns = log_change_coords(float(wildcards.logV), float(wildcards.logS))
+        NUd = 10**log_NUd
+        Ns = 10**log_Ns
         Ud = NUd / N
         s = Ns / N
 
@@ -104,7 +112,8 @@ rule paper_simulation_set_20240417:
 
 rule paper_simulation_set_20240417_final:
     input:
-        [str(data_dir / "paper_simulation_set_20240417" / f"logS={logS}" / f"logV={logV}" / f"seed={seed}" / "output.trees.tsz") \
+        #[str(data_dir / "paper_simulation_set_20240417" / f"logS={logS}" / f"logV={logV}" / f"seed={seed}" / "output.trees.tsz") \
+        [str(data_dir / "paper_simulation_set_20240417" / f"logS={logS}" / f"logV={logV}" / f"seed={seed}" / "output.trees.n_tips=10000.newick") \
             for logS, logV in (
                 list(itertools.product([-2, -1], np.arange(-1, 8.5, 0.5))) + \
                 list(itertools.product([0], np.arange(1, 8.5, 0.5))) + \
